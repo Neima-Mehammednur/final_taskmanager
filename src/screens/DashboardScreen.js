@@ -1,10 +1,217 @@
-import { View, Text } from 'react-native'
-import React from 'react'
 
-export default function DashboardScreen() {
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Progress from 'react-native-progress';
+import * as Location from 'expo-location';
+import { useFocusEffect } from '@react-navigation/native';
+
+const DashboardScreen = () => {
+  const [tasks, setTasks] = useState([]);
+  const [weatherData, setWeatherData] = useState(null);
+  const [greeting, setGreeting] = useState('');
+  const [quote, setQuote] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchTasks();
+      fetchWeather();
+      setGreetingAndQuote();
+    }, [])
+  );
+
+  const fetchTasks = async () => {
+    try {
+      const storedTasks = await AsyncStorage.getItem('tasks');
+      if (storedTasks) {
+        setTasks(JSON.parse(storedTasks));
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const fetchWeather = async () => {
+    const API_KEY = 'e55be00f9ada24e30fcbd080a5078a6a';
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setWeatherData(data);
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+    }
+  };
+
+  const setGreetingAndQuote = () => {
+    const hour = new Date().getHours();
+    let greetingText = 'Good ';
+    if (hour < 12) {
+      greetingText += 'Morning';
+    } else if (hour < 18) {
+      greetingText += 'Afternoon';
+    } else {
+      greetingText += 'Evening';
+    }
+    setGreeting(greetingText);
+
+    const quotes = [
+      'The only way to do great work is to love what you do.',
+      'Believe you can and you’re halfway there.',
+      'The future belongs to those who believe in the beauty of their dreams.',
+    ];
+    setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+  };
+
+  const calculateProgress = () => {
+    const completedTasks = tasks.filter((task) => task.completed).length;
+    return tasks.length > 0 ? completedTasks / tasks.length : 0;
+  };
+
+  const getTodaysTasks = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return tasks.filter((task) => task.deadline.split('T')[0] === today);
+  };
+
   return (
-    <View>
-      <Text>DashboardScreen</Text>
-    </View>
-  )
-}
+    <ScrollView style={styles.container}>
+      <Text style={styles.greeting}>{greeting}!</Text>
+      <Text style={styles.quote}>"{quote}"</Text>
+
+      <View style={styles.progressContainer}>
+        <Progress.Circle
+          progress={calculateProgress()}
+          size={120}
+          showsText={true}
+          formatText={() => {
+            const completedTasks = tasks.filter((task) => task.completed).length;
+            return `${completedTasks}/${tasks.length}`;
+          }}
+          color="#007AFF"
+          thickness={8}
+        />
+        <Text style={styles.progressText}>Tasks Completed</Text>
+      </View>
+
+      {weatherData && weatherData.main && (
+        <View style={styles.weatherContainer}>
+          <Text style={styles.weatherTitle}>Weather in {weatherData.name}</Text>
+          <Text>Temperature: {weatherData.main.temp}°C</Text>
+          <Text>Description: {weatherData.weather[0].description}</Text>
+        </View>
+      )}
+
+      <View style={styles.todaysTasksContainer}>
+        <Text style={styles.todaysTasksTitle}>Today's Tasks</Text>
+        {getTodaysTasks().length > 0 ? (
+          getTodaysTasks().map((task) => (
+            <View key={task.id} style={styles.taskItem}>
+              <Text style={styles.taskName}>{task.name}</Text>
+              <Text style={styles.taskDeadline}>
+                Deadline: {new Date(task.deadline).toLocaleTimeString()}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noTasksText}>No tasks for today.</Text>
+        )}
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  quote: {
+    fontStyle: 'italic',
+    marginBottom: 20,
+    color: '#666',
+  },
+  progressContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  progressText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  weatherContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  weatherTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  todaysTasksContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  todaysTasksTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  taskItem: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  taskName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  taskDeadline: {
+    fontSize: 14,
+    color: '#666',
+  },
+  noTasksText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+});
+
+export default DashboardScreen;

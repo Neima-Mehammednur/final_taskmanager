@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "finalAppPlease",
-    "slug": "finalAppPlease",
+    "name": "TaskMate",
+    "slug": "TaskMate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
