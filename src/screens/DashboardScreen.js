@@ -1,6 +1,10 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Progress from 'react-native-progress';
 import * as Location from 'expo-location';
@@ -12,6 +16,7 @@ const DashboardScreen = () => {
   const [greeting, setGreeting] = useState('');
   const [quote, setQuote] = useState('');
 
+  // Fetch tasks, weather, and set greeting/quote when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchTasks();
@@ -20,6 +25,7 @@ const DashboardScreen = () => {
     }, [])
   );
 
+  // Fetch tasks from AsyncStorage
   const fetchTasks = async () => {
     try {
       const storedTasks = await AsyncStorage.getItem('tasks');
@@ -31,6 +37,7 @@ const DashboardScreen = () => {
     }
   };
 
+  // Fetch weather data using the user's location
   const fetchWeather = async () => {
     const API_KEY = 'e55be00f9ada24e30fcbd080a5078a6a';
     try {
@@ -56,6 +63,7 @@ const DashboardScreen = () => {
     }
   };
 
+  // Set greeting and a random quote based on the time of day
   const setGreetingAndQuote = () => {
     const hour = new Date().getHours();
     let greetingText = 'Good ';
@@ -76,11 +84,13 @@ const DashboardScreen = () => {
     setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
   };
 
+  // Calculate the progress of completed tasks
   const calculateProgress = () => {
     const completedTasks = tasks.filter((task) => task.completed).length;
     return tasks.length > 0 ? completedTasks / tasks.length : 0;
   };
 
+  // Get tasks for today
   const getTodaysTasks = () => {
     const today = new Date().toISOString().split('T')[0];
     return tasks.filter((task) => task.deadline.split('T')[0] === today);
@@ -91,6 +101,7 @@ const DashboardScreen = () => {
       <Text style={styles.greeting}>{greeting}!</Text>
       <Text style={styles.quote}>"{quote}"</Text>
 
+      {/* Progress Circle */}
       <View style={styles.progressContainer}>
         <Progress.Circle
           progress={calculateProgress()}
@@ -106,6 +117,7 @@ const DashboardScreen = () => {
         <Text style={styles.progressText}>Tasks Completed</Text>
       </View>
 
+      {/* Weather Information */}
       {weatherData && weatherData.main && (
         <View style={styles.weatherContainer}>
           <Text style={styles.weatherTitle}>Weather in {weatherData.name}</Text>
@@ -114,6 +126,7 @@ const DashboardScreen = () => {
         </View>
       )}
 
+      {/* Today's Tasks */}
       <View style={styles.todaysTasksContainer}>
         <Text style={styles.todaysTasksTitle}>Today's Tasks</Text>
         {getTodaysTasks().length > 0 ? (
@@ -121,7 +134,7 @@ const DashboardScreen = () => {
             <View key={task.id} style={styles.taskItem}>
               <Text style={styles.taskName}>{task.name}</Text>
               <Text style={styles.taskDeadline}>
-                Deadline: {new Date(task.deadline).toLocaleTimeString()}
+                Deadline: {new Date(task.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
           ))
@@ -135,6 +148,7 @@ const DashboardScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 50,
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',

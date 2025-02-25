@@ -47,7 +47,18 @@ const TaskCreationScreen = () => {
       const tasks = existingTasks ? JSON.parse(existingTasks) : [];
       tasks.push(newTask);
       await AsyncStorage.setItem('tasks', JSON.stringify(tasks));
-      navigation.navigate('TaskList');
+
+      // Reset the form fields
+      setTaskName('');
+      setTaskDescription('');
+      setTaskCategory('Personal');
+      setTaskPriority('Low');
+      setTaskDeadline(new Date());
+      setReminderTime(new Date());
+      setIsReminderEnabled(false);
+
+      // Navigate back to the CalendarScreen and trigger a refresh
+      navigation.navigate('Calendar', { refresh: true });
     } catch (error) {
       console.error('Error saving task:', error);
     }
@@ -143,36 +154,35 @@ const TaskCreationScreen = () => {
       <Text style={styles.label}>Deadline</Text>
       <DateTimePicker
         value={taskDeadline}
-        mode="date"
+        mode="datetime" // Allow picking both date and time
         display="default"
         onChange={(event, selectedDate) => selectedDate && setTaskDeadline(selectedDate)}
       />
-     {/* Reminder Toggle and Time Picker */}
-<View style={styles.reminderContainer}>
-  <Text style={styles.label}>Set Reminder</Text>
-  <TouchableOpacity
-    style={styles.reminderToggle}
-    onPress={() => setIsReminderEnabled(!isReminderEnabled)}
-  >
-    <Ionicons
-      name={isReminderEnabled ? 'notifications' : 'notifications-off'}
-      size={24}
-      color={isReminderEnabled ? '#007AFF' : '#ccc'}
-    />
-  </TouchableOpacity>
-</View>
 
-{isReminderEnabled && (
-  <DateTimePicker
-    style={styles.reminderPicker}
-    value={reminderTime}
-    mode="time"
-    display="default"
-    onChange={(event, selectedTime) => selectedTime && setReminderTime(selectedTime)}
-  />
-)}
+      {/* Reminder Toggle and Time Picker */}
+      <View style={styles.reminderContainer}>
+        <Text style={styles.label}>Set Reminder</Text>
+        <TouchableOpacity
+          style={styles.reminderToggle}
+          onPress={() => setIsReminderEnabled(!isReminderEnabled)}
+        >
+          <Ionicons
+            name={isReminderEnabled ? 'notifications' : 'notifications-off'}
+            size={24}
+            color={isReminderEnabled ? '#007AFF' : '#ccc'}
+          />
+        </TouchableOpacity>
+      </View>
 
-
+      {isReminderEnabled && (
+        <DateTimePicker
+          style={styles.reminderPicker}
+          value={reminderTime}
+          mode="time"
+          display="default"
+          onChange={(event, selectedTime) => selectedTime && setReminderTime(selectedTime)}
+        />
+      )}
 
       {/* Create Task Button */}
       <TouchableOpacity style={styles.createButton} onPress={handleCreateTask}>
@@ -189,8 +199,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'stretch',
     padding: 16,
-    height: "100%",
-},
+    height: '100%',
+  },
   header: {
     marginBottom: 24,
   },
@@ -239,13 +249,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8, 
+    marginBottom: 8,
   },
   reminderPicker: {
     alignSelf: 'flex-start',
     marginTop: -20,
   },
-  
   reminderToggle: {
     padding: 8,
   },
