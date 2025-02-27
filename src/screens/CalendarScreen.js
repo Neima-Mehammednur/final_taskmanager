@@ -75,6 +75,10 @@ const CalendarScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
+       {/* Header */}
+       <View style={styles.header}>
+        <Text style={styles.headerText}>My Tasks</Text>
+      </View>
       <Calendar
         markedDates={markedDates}
         markingType={'multi-dot'}
@@ -101,10 +105,18 @@ const CalendarScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 70,
     height: '100%',
     flex: 1,
     backgroundColor: '#fff',
+  },
+  header: {
+    marginTop: 60,
+    marginLeft:20,
+    marginBottom: 24,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   taskContainer: {
     marginTop: 20,

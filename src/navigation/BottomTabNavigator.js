@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
 import TaskListScreen from '../screens/TaskListScreen';
 import TaskCreationScreen from '../screens/TaskCreationScreen';
-import NotesScreen from '../screens/NotesScreen';
+import NotesScreen from '../screens/VoiceInputScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 
 // Create Tab Navigator
@@ -56,7 +56,7 @@ const BottomTabNavigator = () => {
           }}
         />
         <Tab.Screen 
-          name="Notes" 
+          name="VoiceOver" 
           component={NotesScreen} 
           options={{
             tabBarIcon: ({ color, size }) => (

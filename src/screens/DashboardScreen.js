@@ -98,7 +98,10 @@ const DashboardScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.greeting}>{greeting}!</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Hello UserName</Text>
+      </View>
       <Text style={styles.quote}>"{quote}"</Text>
 
       {/* Progress Circle */}
@@ -148,17 +151,20 @@ const DashboardScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 50,
+    marginTop: 10,
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
-  greeting: {
+  header: {
+    marginTop: 30,
+    marginBottom: 24,
+  },
+  headerText: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
   },
+
   quote: {
     fontStyle: 'italic',
     marginBottom: 20,
@@ -226,6 +232,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
+
 });
 
 export default DashboardScreen;
