@@ -81,9 +81,8 @@ const BottomTabNavigator = () => {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#fff',
-    height: 60,
+    height: 70,
     position: 'absolute',
-    bottom: 10,
     left: 10,
     right: 10,
     borderRadius: 15,
@@ -97,7 +96,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 20,
+    bottom: 8,
     alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
