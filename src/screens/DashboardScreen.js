@@ -18,6 +18,7 @@ import { useIsFocused, useFocusEffect, useNavigation } from '@react-navigation/n
 import { fetchTasks } from '../services/firebaseService';
 import { Ionicons } from '@expo/vector-icons';
 
+
 const DashboardScreen = () => {
   const [tasks, setTasks] = useState([]);
   const [weatherData, setWeatherData] = useState(null);
@@ -178,7 +179,7 @@ const DashboardScreen = () => {
               <TouchableOpacity
                 key={task.id}
                 style={styles.taskItem}
-                onPress={() => navigation.navigate('TaskCreation', { task: task })}
+                onPress={() => navigation.navigate('TaskDetail', { task: task })}
               >
                 <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
                 <View style={styles.taskDetails}>

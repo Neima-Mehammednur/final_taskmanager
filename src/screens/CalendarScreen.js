@@ -188,6 +188,7 @@ const CalendarScreen = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [tasksForSelectedDate, setTasksForSelectedDate] = useState([]);
 
+
   useEffect(() => {
     const tasksCollection = collection(db, 'tasks');
     const q = query(tasksCollection);
@@ -199,7 +200,7 @@ const CalendarScreen = ({ navigation }) => {
       });
       setTasks(tasksData);
       markCalendarDates(tasksData);
-      selectToday(tasksData); // Select today's date on initial load
+      selectToday(tasksData); 
     });
 
     return () => unsubscribe();

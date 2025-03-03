@@ -887,12 +887,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { fetchTasks, deleteTask, updateTask } from "../services/firebaseService";
 import { useFocusEffect } from '@react-navigation/native';
 
+
 const TaskListScreen = ({ navigation, route }) => {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("All");
   const [searchText, setSearchText] = useState("");
   const searchInputRef = useRef(null);
-
+  
   useFocusEffect(
     React.useCallback(() => {
       const loadTasks = async () => {
@@ -1004,6 +1005,7 @@ const TaskListScreen = ({ navigation, route }) => {
   };
 
   const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.taskCard} onPress={() => navigation.navigate('TaskDetail', { task: item })}>
     <View style={styles.taskCard}>
       <TouchableOpacity onPress={() => handleToggleComplete(item.id)}>
         <Ionicons
@@ -1035,6 +1037,7 @@ const TaskListScreen = ({ navigation, route }) => {
         <Ionicons name="trash-outline" size={24} color="#FF5252" />
       </TouchableOpacity>
     </View>
+    </TouchableOpacity>
   );
 
   const renderFooter = () => (
@@ -1154,7 +1157,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   highPriorityText: {
-    color: "#FF5252", // Red color for high-priority tasks
+    color: "#FF5252", 
     fontWeight: "bold",
   },
   reminderIndicator: {
