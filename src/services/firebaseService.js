@@ -1,4 +1,4 @@
-import { db } from "./../../configs/firebaseConfig";
+import { db } from "../configs/firebaseConfig";
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
 // Add a new task
@@ -40,3 +40,4 @@ export const deleteTask = async (taskId) => {
     console.error("Error deleting task:", error);
   }
 };
+

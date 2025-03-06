@@ -1,252 +1,170 @@
-
-// import React from 'react';
-// import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-// import { LinearGradient } from 'expo-linear-gradient';
-// import { Ionicons } from '@expo/vector-icons';
-
-// const TaskDetailScreen = ({ route, navigation }) => {
-//   const { task } = route.params;
-
-//   return (
-//     <View style={styles.modalContainer}>
-//       <ScrollView style={styles.modalContent}>
-//         <LinearGradient colors={['#4CAF50', '#81C784']} style={styles.header}>
-//           <Text style={styles.headerText}>{task.name}</Text>
-//         </LinearGradient>
-
-//         <View style={styles.detailContainer}>
-//           <Text style={styles.detailLabel}>Description:</Text>
-//           <Text style={styles.detailText}>{task.description}</Text>
-
-//           <Text style={styles.detailLabel}>Course:</Text>
-//           <Text style={styles.detailText}>{task.course}</Text>
-
-//           <Text style={styles.detailLabel}>Priority:</Text>
-//           <Text style={styles.detailText}>{task.priority}</Text>
-
-//           <Text style={styles.detailLabel}>Deadline:</Text>
-//           <Text style={styles.detailText}>{new Date(task.deadline).toLocaleString()}</Text>
-
-//           {task.reminder && (
-//             <>
-//               <Text style={styles.detailLabel}>Reminder:</Text>
-//               <Text style={styles.detailText}>{new Date(task.reminder).toLocaleString()}</Text>
-//             </>
-//           )}
-
-//           <Text style={styles.detailLabel}>Notes:</Text>
-//           <Text style={styles.detailText}>{task.notes || 'No notes'}</Text>
-
-//           {task.attachments && task.attachments.length > 0 && (
-//             <>
-//               <Text style={styles.detailLabel}>Attachments:</Text>
-//               {task.attachments.map((attachment, index) => (
-//                 <Text key={index} style={styles.detailText}>
-//                   {attachment.name}
-//                 </Text>
-//               ))}
-//             </>
-//           )}
-//         </View>
-
-//         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-//           <Ionicons name="close-circle" size={32} color="#4CAF50" />
-//         </TouchableOpacity>
-//       </ScrollView>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   modalContainer: {
-//     flex: 1,
-//     justifyContent: 'flex-end', // Align to bottom
-//   },
-//   modalContent: {
-//     backgroundColor: '#F5F5F5',
-//     borderTopLeftRadius: 20,
-//     borderTopRightRadius: 20,
-//     height: '60%', // Adjust height as needed
-//     padding: 16,
-//   },
-//   header: {
-//     padding: 20,
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     borderTopLeftRadius: 20,
-//     borderTopRightRadius: 20,
-//   },
-//   headerText: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#FFF',
-//   },
-//   detailContainer: {
-//     marginTop: 20,
-//   },
-//   detailLabel: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     color: '#333',
-//     marginTop: 10,
-//   },
-//   detailText: {
-//     fontSize: 16,
-//     color: '#666',
-//     marginTop: 5,
-//   },
-//   closeButton: {
-//     position: 'absolute',
-//     top: 10,
-//     right: 10,
-//   },
-// });
-
-// export default TaskDetailScreen;
-
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { DarkModeContext } from '../contexts/DarkModeContext'; 
 
 const TaskDetailScreen = ({ route, navigation }) => {
-    const { task } = route.params;
+  const { task } = route.params;
+  const { isDarkMode } = useContext(DarkModeContext); 
 
-    return (
-        <View style={styles.modalContainer}>
-            <ScrollView style={styles.modalContent}>
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
-                <Text style={styles.headerText}>Task Detail</Text>
+  return (
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <Text style={[styles.headerText, isDarkMode && styles.darkText]}>Task Detail</Text>
 
-                <View style={styles.detailContainer}>
-                    <View style={styles.detailRow}>
-                        <Ionicons name="reader-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                        <View style={styles.detailTextContainer}>
-                            <Text style={styles.detailLabel}>Task Name:</Text>
-                            <Text style={styles.detailText}>{task.name}</Text>
-                        </View>
-                    </View>
-                    <View style={styles.detailRow}>
-                        <Ionicons name="reader-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                        <View style={styles.detailTextContainer}>
-                            <Text style={styles.detailLabel}>Description:</Text>
-                            <Text style={styles.detailText}>{task.description}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Ionicons name="book-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                        <View style={styles.detailTextContainer}>
-                            <Text style={styles.detailLabel}>Course:</Text>
-                            <Text style={styles.detailText}>{task.course}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Ionicons name="flag-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                        <View style={styles.detailTextContainer}>
-                            <Text style={styles.detailLabel}>Priority:</Text>
-                            <Text style={styles.detailText}>{task.priority}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.detailRow}>
-                        <Ionicons name="calendar-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                        <View style={styles.detailTextContainer}>
-                            <Text style={styles.detailLabel}>Deadline:</Text>
-                            <Text style={styles.detailText}>{new Date(task.deadline).toLocaleString()}</Text>
-                        </View>
-                    </View>
-
-                    {task.reminder && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="notifications-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                            <View style={styles.detailTextContainer}>
-                                <Text style={styles.detailLabel}>Reminder:</Text>
-                                <Text style={styles.detailText}>{new Date(task.reminder).toLocaleString()}</Text>
-                            </View>
-                        </View>
-                    )}
-
-
-                    {task.attachments && task.attachments.length > 0 && (
-                        <View style={styles.detailRow}>
-                            <Ionicons name="attach-outline" size={24} color="#4CAF50" style={styles.detailIcon} />
-                            <View style={styles.detailTextContainer}>
-                                <Text style={styles.detailLabel}>Attachments:</Text>
-                                {task.attachments.map((attachment, index) => (
-                                    <Text key={index} style={styles.detailText}>
-                                        {attachment.name}
-                                    </Text>
-                                ))}
-                            </View>
-                        </View>
-                    )}
-                </View>
-
-                <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-                    <Ionicons name="close-circle" size={32} color="#4CAF50" />
-                </TouchableOpacity>
-            </ScrollView>
+      <ScrollView style={[styles.content, isDarkMode && styles.darkContent]}>
+        {/* Name */}
+        <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+          <Ionicons name="document-text-outline" size={24} color="#4CAF50" style={styles.icon} />
+          <View style={styles.detailTextContainer}>
+            <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Task Name</Text>
+            <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{task.name}</Text>
+          </View>
         </View>
-    );
+        {/* Description */}
+        <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+          <Ionicons name="document-text-outline" size={24} color="#4CAF50" style={styles.icon} />
+          <View style={styles.detailTextContainer}>
+            <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Description</Text>
+            <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{task.description}</Text>
+          </View>
+        </View>
+
+        {/* Course */}
+        <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+          <Ionicons name="school-outline" size={24} color="#4CAF50" style={styles.icon} />
+          <View style={styles.detailTextContainer}>
+            <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Course</Text>
+            <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{task.course}</Text>
+          </View>
+        </View>
+
+        {/* Priority */}
+        <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+          <Ionicons name="flag-outline" size={24} color="#4CAF50" style={styles.icon} />
+          <View style={styles.detailTextContainer}>
+            <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Priority</Text>
+            <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{task.priority}</Text>
+          </View>
+        </View>
+
+        {/* Deadline */}
+        <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+          <Ionicons name="calendar-outline" size={24} color="#4CAF50" style={styles.icon} />
+          <View style={styles.detailTextContainer}>
+            <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Deadline</Text>
+            <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{formatDateTime(task.deadline)}</Text>
+          </View>
+        </View>
+
+        {/* Reminder */}
+        {task.reminder && (
+          <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+            <Ionicons name="alarm-outline" size={24} color="#4CAF50" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Reminder</Text>
+              <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{formatDateTime(task.reminder)}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Attachments */}
+        {task.attachments && task.attachments.length > 0 && (
+          <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
+            <Ionicons name="attach-outline" size={24} color="#4CAF50" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={[styles.detailLabel, isDarkMode && styles.darkText]}>Attachments</Text>
+              {task.attachments.map((attachment, index) => (
+                <Text key={index} style={[styles.detailText, isDarkMode && styles.darkText]}>
+                  {attachment.name}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Close Button */}
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="close-circle" size={40} color="#4CAF50" />
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        backgroundColor: '#F5F5F5',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        height: '60%',
-        padding: 16,
-    },
-    header: {
-        padding: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
-    headerText: {
-        marginTop: 20,
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    detailContainer: {
-        marginTop: 20,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginTop: 15,
-    },
-    detailIcon: {
-        marginRight: 10,
-    },
-    detailTextContainer: {
-        flex: 1,
-    },
-    detailLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 5,
-    },
-    detailText: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 10,
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 20,
+    marginTop: 20,
+  },
+  darkText: {
+    color: '#FFF',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  darkContent: {
+    backgroundColor: '#1E1E1E',
+  },
+  detailCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  darkDetailCard: {
+    backgroundColor: '#2C2C2C',
+  },
+  icon: {
+    marginRight: 16,
+  },
+  detailTextContainer: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
 });
 
 export default TaskDetailScreen;

@@ -1,15 +1,13 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
-  SafeAreaView,
   RefreshControl,
+  SafeAreaView,
   Image,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
@@ -17,7 +15,8 @@ import * as Location from 'expo-location';
 import { useIsFocused, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { fetchTasks } from '../services/firebaseService';
 import { Ionicons } from '@expo/vector-icons';
-
+import { auth } from "../configs/firebaseConfig";
+import { DarkModeContext } from '../contexts/DarkModeContext';
 
 const DashboardScreen = () => {
   const [tasks, setTasks] = useState([]);
@@ -27,6 +26,8 @@ const DashboardScreen = () => {
   const isFocused = useIsFocused();
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+  const [userName, setUserName] = useState("");
+  const { isDarkMode } = useContext(DarkModeContext);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -51,6 +52,13 @@ const DashboardScreen = () => {
       fetchData();
     }, [])
   );
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName || "User");
+    }
+  }, []);
 
   useEffect(() => {
     if (isFocused) {
@@ -129,69 +137,89 @@ const DashboardScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDarkMode && styles.darkContainer]}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.scrollContainer}
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greetingText}>{greeting}, UserName</Text>
-          <Text style={styles.quoteText}>"{quote}"</Text>
+          <Text style={[styles.greetingText, isDarkMode && styles.darkText]}>Good Afternoon, {userName}</Text>
+          <Text style={[styles.quoteText, isDarkMode && styles.darkText]}>"{quote}"</Text>
         </View>
 
         {/* Progress Section */}
-        <View style={styles.progressCard}>
-          <Text style={styles.cardTitle}>Task Progress</Text>
+        <View style={[styles.progressCard, isDarkMode && styles.darkCard]}>
+          <Text style={[styles.cardTitle, isDarkMode && styles.darkText]}>Task Progress</Text>
           <View style={styles.progressContent}>
             <Progress.Circle
               progress={calculateProgress()}
-              size={100}
+              size={80}
               showsText={true}
               formatText={() => {
                 const completedTasks = tasks.filter((task) => task.completed).length;
-                return `${completedTasks}/${tasks.length}`;
+                return `${Math.round(calculateProgress() * 100)}%`;
               }}
               color="#4CAF50"
-              thickness={8}
+              thickness={6}
             />
-            <Text style={styles.progressLabel}>Tasks Completed</Text>
+            <View style={styles.metricsGrid}>
+              <View style={styles.metricItem}>
+                <Ionicons name="list-outline" size={24} color="#4CAF50" />
+                <Text style={[styles.metricValue, isDarkMode && styles.darkText]}>{tasks.length}</Text>
+                <Text style={[styles.metricLabel, isDarkMode && styles.darkText]}>Total Tasks</Text>
+              </View>
+              <View style={styles.metricItem}>
+                <Ionicons name="checkmark-circle-outline" size={24} color="#4CAF50" />
+                <Text style={[styles.metricValue, isDarkMode && styles.darkText]}>
+                  {tasks.filter((task) => task.completed).length}
+                </Text>
+                <Text style={[styles.metricLabel, isDarkMode && styles.darkText]}>Completed</Text>
+              </View>
+              <View style={styles.metricItem}>
+                <Ionicons name="time-outline" size={24} color="#FFA726" />
+                <Text style={[styles.metricValue, isDarkMode && styles.darkText]}>
+                  {tasks.filter((task) => !task.completed).length}
+                </Text>
+                <Text style={[styles.metricLabel, isDarkMode && styles.darkText]}>Active</Text>
+              </View>
+            </View>
           </View>
         </View>
 
         {/* Weather Section */}
         {weatherData && weatherData.main && (
-          <View style={styles.weatherCard}>
-            <Text style={styles.cardTitle}>Weather in {weatherData.name}</Text>
+          <View style={[styles.weatherCard, isDarkMode && styles.darkCard]}>
+            <Text style={[styles.cardTitle, isDarkMode && styles.darkText]}>Weather in {weatherData.name}</Text>
             <View style={styles.weatherContent}>
               {getWeatherIcon(weatherData.weather[0].icon)}
-              <Text style={styles.weatherText}>{weatherData.main.temp}°C</Text>
-              <Text style={styles.weatherDescription}>{weatherData.weather[0].description}</Text>
+              <Text style={[styles.weatherText, isDarkMode && styles.darkText]}>{weatherData.main.temp}°C</Text>
+              <Text style={[styles.weatherDescription, isDarkMode && styles.darkText]}>{weatherData.weather[0].description}</Text>
             </View>
           </View>
         )}
 
         {/* Today's Tasks Section */}
-        <View style={styles.tasksCard}>
-          <Text style={styles.cardTitle}>Today's Tasks</Text>
+        <View style={[styles.tasksCard, isDarkMode && styles.darkCard]}>
+          <Text style={[styles.cardTitle, isDarkMode && styles.darkText]}>Today's Tasks</Text>
           {getTodaysTasks().length > 0 ? (
             getTodaysTasks().map((task) => (
               <TouchableOpacity
                 key={task.id}
-                style={styles.taskItem}
+                style={[styles.taskItem, isDarkMode && styles.darkTaskItem]}
                 onPress={() => navigation.navigate('TaskDetail', { task: task })}
               >
                 <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
                 <View style={styles.taskDetails}>
-                  <Text style={styles.taskName}>{task.name}</Text>
-                  <Text style={styles.taskDeadline}>
+                  <Text style={[styles.taskName, isDarkMode && styles.darkText]}>{task.name}</Text>
+                  <Text style={[styles.taskDeadline, isDarkMode && styles.darkText]}>
                     Deadline: {new Date(task.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Text>
                 </View>
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={styles.noTasksText}>No tasks for today. Enjoy your day!</Text>
+            <Text style={[styles.noTasksText, isDarkMode && styles.darkText]}>No tasks for today. Enjoy your day!</Text>
           )}
         </View>
       </ScrollView>
@@ -204,6 +232,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
   scrollContainer: {
     padding: 16,
   },
@@ -214,6 +245,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  darkText: {
+    color: '#FFF',
   },
   quoteText: {
     fontSize: 14,
@@ -232,6 +266,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  darkCard: {
+    backgroundColor: '#1E1E1E',
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -240,6 +277,7 @@ const styles = StyleSheet.create({
   },
   progressContent: {
     alignItems: 'center',
+    marginBottom: 16,
   },
   progressLabel: {
     fontSize: 16,
@@ -294,6 +332,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
+  darkTaskItem: {
+    backgroundColor: '#2C2C2C',
+  },
   taskDetails: {
     marginLeft: 12,
   },
@@ -311,6 +352,24 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 16,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  metricItem: {
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 
