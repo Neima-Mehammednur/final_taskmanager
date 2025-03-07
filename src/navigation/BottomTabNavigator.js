@@ -97,7 +97,7 @@ const MainTabs = () => {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#fff',
-    height: 70,
+    height: 65,
     position: 'absolute',
     left: 10,
     right: 10,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 8,
+    bottom: 3,
     alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
