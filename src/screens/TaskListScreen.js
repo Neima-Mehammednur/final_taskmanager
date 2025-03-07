@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchTasks, deleteTask, updateTask } from "../services/firebaseService";
 import { useFocusEffect } from '@react-navigation/native';
-import { DarkModeContext } from "../contexts/DarkModeContext"; 
+import { DarkModeContext } from "../contexts/DarkModeContext";
 
 const TaskListScreen = ({ navigation, route }) => {
   const [tasks, setTasks] = useState([]);
@@ -29,65 +30,9 @@ const TaskListScreen = ({ navigation, route }) => {
 
   const handleToggleComplete = async (taskId) => {
     const task = tasks.find((task) => task.id === taskId);
-    const now = new Date();
-    const deadline = new Date(task.deadline);
-    const completedOnTime = now <= deadline;
-  
-    const updatedTask = {
-      ...task,
-      completed: !task.completed,
-      completedOnTime: completedOnTime,
-      completionDate: now.toISOString(),
-    };
-  
+    const updatedTask = { ...task, completed: !task.completed };
     await updateTask(taskId, updatedTask);
-  
-    // Update user's gamification data
-    if (updatedTask.completed) {
-      await updateUserGamificationData(completedOnTime);
-    }
-  
     setTasks(tasks.map((task) => (task.id === taskId ? updatedTask : task)));
-  };
-  
-  const updateUserGamificationData = async (completedOnTime) => {
-    const user = auth.currentUser;
-    if (!user) return;
-  
-    const userRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userRef);
-    const userData = userDoc.data();
-  
-    // Calculate points
-    const pointsEarned = completedOnTime ? 10 : 5; // Award more points for on-time completion
-    const newPoints = (userData.points || 0) + pointsEarned;
-  
-    // Calculate streak
-    const lastCompletionDate = userData.lastCompletionDate ? new Date(userData.lastCompletionDate) : null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-  
-    let newStreak = userData.streak || 0;
-    if (lastCompletionDate) {
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
-  
-      if (lastCompletionDate.getTime() === yesterday.getTime()) {
-        newStreak += 1; // Increment streak if the last completion was yesterday
-      } else if (lastCompletionDate.getTime() < yesterday.getTime()) {
-        newStreak = 1; // Reset streak if there was a gap
-      }
-    } else {
-      newStreak = 1; // First task completion
-    }
-  
-    // Update user data
-    await updateDoc(userRef, {
-      points: newPoints,
-      streak: newStreak,
-      lastCompletionDate: today.toISOString(),
-    });
   };
 
   const handleClearCompleted = async () => {
@@ -106,7 +51,6 @@ const TaskListScreen = ({ navigation, route }) => {
     if (filter === "Active") return !task.completed && searchMatch;
     if (filter === "Completed") return task.completed && searchMatch;
 
-    // Normalize the course name for comparison
     const normalizedCourse = task.course?.trim().toLowerCase();
     const normalizedFilter = filter.trim().toLowerCase();
 
@@ -131,7 +75,7 @@ const TaskListScreen = ({ navigation, route }) => {
       const task = tasks.find((task) => task.course?.trim().toLowerCase() === normalizedCourse);
       return task.course;
     });
-  
+
     return (
       <View style={[styles.headerContainer, isDarkMode && styles.darkHeaderContainer]}>
         <Text style={[styles.headerText, isDarkMode && styles.darkText]}>My Tasks</Text>
@@ -155,7 +99,7 @@ const TaskListScreen = ({ navigation, route }) => {
               <Text
                 style={[
                   styles.filterText,
-                  filter === filterName && styles.activeFilterText, 
+                  filter === filterName && styles.activeFilterText,
                   isDarkMode && styles.darkFilterText,
                 ]}
               >
@@ -181,9 +125,13 @@ const TaskListScreen = ({ navigation, route }) => {
       </View>
     );
   };
+
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={[styles.taskCard, isDarkMode && styles.darkTaskCard]} onPress={() => navigation.navigate('TaskDetail', { task: item })}>
-      <View style={[styles.taskCard, isDarkMode && styles.darkTaskCard]}>
+    <TouchableOpacity
+      style={[styles.taskCard, isDarkMode && styles.darkTaskCard]}
+      onPress={() => navigation.navigate('TaskDetail', { task: item })}
+    >
+      <View style={styles.taskContent}>
         <TouchableOpacity onPress={() => handleToggleComplete(item.id)}>
           <Ionicons
             name={item.completed ? "checkbox-outline" : "square-outline"}
@@ -195,24 +143,45 @@ const TaskListScreen = ({ navigation, route }) => {
           <Text style={[styles.taskName, item.completed && styles.completedTaskName, isDarkMode && styles.darkText]}>
             {item.name}
           </Text>
-          <Text style={[styles.taskDescription, isDarkMode && styles.darkText]}>
-            {item.description ? (item.description.length > 30 ? `${item.description.substring(0, 30)}...` : item.description) : "No description"}
-          </Text>
-          <Text style={[styles.taskInfo, isDarkMode && styles.darkText]}>
-            Priority: <Text style={[item.priority === "High" && styles.highPriorityText, isDarkMode && styles.darkHighPriorityText]}>{item.priority}</Text> | Deadline: {new Date(item.deadline).toLocaleDateString()}
-          </Text>
+          {/* Priority (only if High) */}
+          {item.priority === "High" && (
+            <Text style={[styles.highPriorityText, isDarkMode && styles.darkHighPriorityText]}>
+              High Priority
+            </Text>
+          )}
+          {/* Reminder */}
           {item.reminder && (
             <Text style={[styles.reminderIndicator, isDarkMode && styles.darkText]}>
               Reminder: {new Date(item.reminder).toLocaleTimeString()}
             </Text>
           )}
+          {/* Deadline */}
+          <Text style={[styles.taskInfo, isDarkMode && styles.darkText]}>
+            Deadline: {new Date(item.deadline).toLocaleDateString()}
+          </Text>
+          {/* Attachments */}
+          {item.attachments && item.attachments.length > 0 && (
+            <View style={styles.attachmentsContainer}>
+              <ScrollView horizontal>
+                {item.attachments.map((attachment, index) => (
+                  <View key={index} style={[styles.attachmentItem, isDarkMode && styles.darkAttachmentItem]}>
+                    <Ionicons name="document-outline" size={16} color={isDarkMode ? "#FFF" : "#333"} />
+                    <Text style={[styles.attachmentName, isDarkMode && styles.darkText]}>{attachment.name}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("TaskCreation", { task: item })}>
-          <Ionicons name="create-outline" size={24} color="#4CAF50" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDeleteTask(item.id)}>
-          <Ionicons name="trash-outline" size={24} color="#FF5252" />
-        </TouchableOpacity>
+        {/* Edit and Delete Buttons */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate("TaskCreation", { task: item })}>
+            <Ionicons name="create-outline" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleDeleteTask(item.id)}>
+            <Ionicons name="trash-outline" size={24} color="#FF5252" />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -305,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: '#555',
   },
   activeFilter: {
-    backgroundColor: "#4CAF50", 
+    backgroundColor: "#4CAF50",
     borderColor: "#4CAF50",
   },
   filterText: {
@@ -315,16 +284,14 @@ const styles = StyleSheet.create({
     color: '#AAA',
   },
   activeFilterText: {
-    color: "#FFF", 
+    color: "#FFF",
   },
   taskCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
     backgroundColor: "#FFF",
     borderRadius: 12,
     marginBottom: 8,
     marginHorizontal: 16,
+    padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -333,6 +300,10 @@ const styles = StyleSheet.create({
   },
   darkTaskCard: {
     backgroundColor: '#2C2C2C',
+  },
+  taskContent: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   taskDetails: {
     flex: 1,
@@ -347,9 +318,18 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
     color: "#888",
   },
-  taskDescription: {
-    fontSize: 14,
-    color: "#666",
+  highPriorityText: {
+    color: "#FF5252",
+    fontWeight: "bold",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  darkHighPriorityText: {
+    color: '#FF5252',
+  },
+  reminderIndicator: {
+    fontSize: 12,
+    color: "#2196F3",
     marginTop: 4,
   },
   taskInfo: {
@@ -357,18 +337,32 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 4,
   },
-  highPriorityText: {
-    color: "#FF5252",
-    fontWeight: "bold",
+  attachmentsContainer: {
+    marginTop: 8,
   },
-  darkHighPriorityText: {
-    color: '#FF5252',
-    fontWeight: 'bold',
+  attachmentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginRight: 8,
+    backgroundColor: "#FFF",
   },
-  reminderIndicator: {
+  darkAttachmentItem: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#555',
+  },
+  attachmentName: {
     fontSize: 12,
-    color: "#2196F3",
-    marginTop: 4,
+    color: "#333",
+    marginLeft: 4,
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
   footerContainer: {
     flexDirection: "row",
