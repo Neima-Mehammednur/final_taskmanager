@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   View,
@@ -355,11 +356,13 @@ const styles = StyleSheet.create({
   },
   metricsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-around', 
     marginTop: 16,
+    paddingHorizontal: 15, 
   },
   metricItem: {
     alignItems: 'center',
+    marginHorizontal: 16, 
   },
   metricValue: {
     fontSize: 20,

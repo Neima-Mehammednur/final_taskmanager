@@ -2,13 +2,13 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../configs/firebaseConfig';
-import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import { DarkModeContext } from '../contexts/DarkModeContext';
 
 const RegistrationScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const { isDarkMode } = useContext(DarkModeContext); // Use DarkModeContext
+  const { isDarkMode } = useContext(DarkModeContext); 
 
   const handleRegister = async () => {
     try {

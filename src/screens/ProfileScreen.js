@@ -122,6 +122,8 @@ const ProfileScreen = () => {
     return { completedTasks, activeTasks };
   };
 
+  
+
   return (
     <SafeAreaView style={[styles.safeArea, isDarkMode && styles.darkSafeArea]}>
       <ScrollView contentContainerStyle={styles.container}>

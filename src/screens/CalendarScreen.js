@@ -1,13 +1,11 @@
-
-
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../configs/firebaseConfig';
-import { LinearGradient } from 'expo-linear-gradient';
-import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import { DarkModeContext } from '../contexts/DarkModeContext';
+import * as CalendarLib from 'expo-calendar';
 
 LocaleConfig.locales['en'] = {
   monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -23,9 +21,9 @@ const CalendarScreen = ({ navigation }) => {
   const [tasks, setTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [tasksForSelectedDate, setTasksForSelectedDate] = useState([]);
-  const { isDarkMode } = useContext(DarkModeContext); // Use DarkModeContext
+  const { isDarkMode } = useContext(DarkModeContext);
+  const [calendarKey, setCalendarKey] = useState(0);
 
-  
   useEffect(() => {
     const tasksCollection = collection(db, 'tasks');
     const q = query(tasksCollection);
@@ -43,6 +41,10 @@ const CalendarScreen = ({ navigation }) => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    setCalendarKey((prevKey) => prevKey + 1);
+  }, [isDarkMode]);
+
   const markCalendarDates = (fetchedTasks) => {
     const marked = {};
 
@@ -59,8 +61,8 @@ const CalendarScreen = ({ navigation }) => {
       } else if (task.priority === 'Medium') {
         dotColor = '#FFA726';
       }
-
-      marked[date].dots.push({ key: `${task.id}-${date}`, color: dotColor });
+      const dotKey = `${task.id}-${date}-${marked[date].dots.length}`;
+      marked[date].dots.push({ key: dotKey, color: dotColor });
     });
 
     setMarkedDates(marked);
@@ -85,10 +87,90 @@ const CalendarScreen = ({ navigation }) => {
     setTasksForSelectedDate(filteredTasks);
   };
 
-  const handleTaskPress = (task) => {
-    navigation.navigate('TaskDetail', { task });
+  const requestCalendarPermissions = async () => {
+    const { status } = await CalendarLib.requestCalendarPermissionsAsync();
+    if (status === 'granted') {
+      console.log('Calendar permissions granted.');
+      return true;
+    } else {
+      console.log('Calendar permissions denied.');
+      return false;
+    }
   };
 
+  const getDefaultCalendar = async () => {
+    if (Platform.OS === 'ios') {
+      return await CalendarLib.getDefaultCalendarAsync();
+    } else {
+      const calendars = await CalendarLib.getCalendarsAsync(CalendarLib.EntityTypes.EVENT);
+      return calendars.find((cal) => cal.isPrimary) || calendars[0];
+    }
+  };
+
+  const createCalendar = async () => {
+    const newCalendar = {
+      title: 'My App Calendar',
+      entityType: CalendarLib.EntityTypes.EVENT,
+      color: '#4CAF50',
+      sourceId: (Platform.OS === 'ios') ? await CalendarLib.getDefaultCalendarAsync().source.id : undefined,
+      source: (Platform.OS === 'ios') ? undefined : { isLocalAccount: true, name: 'My App' },
+      name: 'My App Calendar',
+      accessLevel: CalendarLib.CalendarAccessLevel.OWNER,
+      ownerAccount: (Platform.OS === 'android') ? 'local' : undefined,
+    };
+    return await CalendarLib.createCalendarAsync(newCalendar);
+  };
+
+  const getOrCreateCalendar = async () => {
+    let calendar = await getDefaultCalendar();
+    if (!calendar) {
+      calendar = await createCalendar();
+    }
+    return calendar;
+  };
+
+  const addEventToCalendar = async (eventData) => {
+    try {
+      const hasPermissions = await requestCalendarPermissions();
+      if (!hasPermissions) {
+        return;
+      }
+
+      const calendar = await getOrCreateCalendar();
+      if (!calendar) {
+        console.error('Could not get or create calendar.');
+        return;
+      }
+
+      const event = {
+        title: eventData.title,
+        startDate: eventData.startDate,
+        endDate: eventData.endDate,
+        notes: eventData.notes,
+        calendarId: calendar.id,
+      };
+
+      const eventId = await CalendarLib.createEventAsync(calendar.id, event);
+      console.log('Event added to calendar:', eventId);
+    } catch (error) {
+      console.error('Error adding event to calendar:', error);
+    }
+  };
+
+  const handleAddTaskToCalendar = async (task) => {
+    const eventData = {
+      title: task.name,
+      startDate: new Date(task.deadline),
+      endDate: new Date(new Date(task.deadline).getTime() + 60 * 60 * 1000),
+      notes: task.description,
+    };
+    await addEventToCalendar(eventData);
+  };
+
+  const handleTaskPress = (task) => {
+    navigation.navigate('TaskDetail', { task });
+    handleAddTaskToCalendar(task);
+  };
 
   return (
     <ScrollView style={[styles.container, isDarkMode && styles.darkContainer]}>
@@ -96,23 +178,27 @@ const CalendarScreen = ({ navigation }) => {
 
       <View style={[styles.calendarContainer, isDarkMode && styles.darkCalendarContainer]}>
         <Calendar
+          key={calendarKey}
           markedDates={markedDates}
           markingType={'multi-dot'}
           onDayPress={onDayPress}
           theme={{
-            backgroundColor: isDarkMode ? '#1E1E1E' : '#fff', // Apply dark mode background
-            calendarBackground: isDarkMode ? '#1E1E1E' : '#fff', // Apply dark mode background
-            textSectionTitleColor: '#4CAF50',
+            backgroundColor: isDarkMode ? '#1E1E1E' : '#fff',
+            calendarBackground: isDarkMode ? '#1E1E1E' : '#fff',
+            textSectionTitleColor: isDarkMode ? '#FFF' : '#4CAF50',
             selectedDayBackgroundColor: '#4CAF50',
             selectedDayTextColor: '#fff',
             todayTextColor: '#4CAF50',
-            dayTextColor: isDarkMode ? '#FFF' : '#333', // Apply dark mode text color
-            textDisabledColor: '#ccc',
-            arrowColor: '#4CAF50',
-            monthTextColor: '#4CAF50',
+            dayTextColor: isDarkMode ? '#FFF' : '#333',
+            textDisabledColor: isDarkMode ? '#555' : '#ccc',
+            arrowColor: isDarkMode ? '#FFF' : '#4CAF50',
+            monthTextColor: isDarkMode ? '#FFF' : '#4CAF50',
             textDayFontWeight: 'bold',
             textMonthFontWeight: 'bold',
             textDayHeaderFontWeight: 'bold',
+            textDayHeaderFontSize: 14,
+            textDayFontSize: 16,
+            textMonthFontSize: 18,
           }}
         />
       </View>
@@ -135,8 +221,8 @@ const CalendarScreen = ({ navigation }) => {
                         task.priority === 'High'
                           ? '#FF5252'
                           : task.priority === 'Medium'
-                          ? '#FFA726'
-                          : '#4CAF50',
+                            ? '#FFA726'
+                            : '#4CAF50',
                     },
                   ]}
                 >
@@ -164,7 +250,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  darkContainer:{
+  darkContainer: {
     backgroundColor: '#121212',
   },
   headerText: {
@@ -174,7 +260,7 @@ const styles = StyleSheet.create({
     marginTop: 70,
     marginLeft: 20,
   },
-  darkText:{
+  darkText: {
     color: '#FFF',
   },
   calendarContainer: {
@@ -187,13 +273,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  darkCalendarContainer:{
+  darkCalendarContainer: {
     backgroundColor: '#1E1E1E',
   },
   taskContainer: {
     margin: 16,
   },
-  darkTaskContainer:{
+  darkTaskContainer: {
     backgroundColor: '#1E1E1E',
   },
   selectedDateText: {
@@ -214,7 +300,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  darkTaskCard:{
+  darkTaskCard: {
     backgroundColor: '#2C2C2C',
   },
   taskName: {

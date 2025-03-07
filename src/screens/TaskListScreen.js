@@ -29,9 +29,65 @@ const TaskListScreen = ({ navigation, route }) => {
 
   const handleToggleComplete = async (taskId) => {
     const task = tasks.find((task) => task.id === taskId);
-    const updatedTask = { ...task, completed: !task.completed };
+    const now = new Date();
+    const deadline = new Date(task.deadline);
+    const completedOnTime = now <= deadline;
+  
+    const updatedTask = {
+      ...task,
+      completed: !task.completed,
+      completedOnTime: completedOnTime,
+      completionDate: now.toISOString(),
+    };
+  
     await updateTask(taskId, updatedTask);
+  
+    // Update user's gamification data
+    if (updatedTask.completed) {
+      await updateUserGamificationData(completedOnTime);
+    }
+  
     setTasks(tasks.map((task) => (task.id === taskId ? updatedTask : task)));
+  };
+  
+  const updateUserGamificationData = async (completedOnTime) => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+  
+    // Calculate points
+    const pointsEarned = completedOnTime ? 10 : 5; // Award more points for on-time completion
+    const newPoints = (userData.points || 0) + pointsEarned;
+  
+    // Calculate streak
+    const lastCompletionDate = userData.lastCompletionDate ? new Date(userData.lastCompletionDate) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+  
+    let newStreak = userData.streak || 0;
+    if (lastCompletionDate) {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+  
+      if (lastCompletionDate.getTime() === yesterday.getTime()) {
+        newStreak += 1; // Increment streak if the last completion was yesterday
+      } else if (lastCompletionDate.getTime() < yesterday.getTime()) {
+        newStreak = 1; // Reset streak if there was a gap
+      }
+    } else {
+      newStreak = 1; // First task completion
+    }
+  
+    // Update user data
+    await updateDoc(userRef, {
+      points: newPoints,
+      streak: newStreak,
+      lastCompletionDate: today.toISOString(),
+    });
   };
 
   const handleClearCompleted = async () => {
