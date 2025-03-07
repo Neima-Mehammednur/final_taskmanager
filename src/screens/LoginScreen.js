@@ -2,12 +2,12 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../configs/firebaseConfig';
-import { DarkModeContext } from '../contexts/DarkModeContext'; // Import DarkModeContext
+import { DarkModeContext } from '../contexts/DarkModeContext'; 
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { isDarkMode } = useContext(DarkModeContext); // Use DarkModeContext
+  const { isDarkMode } = useContext(DarkModeContext); 
 
   const handleLogin = async () => {
     try {
@@ -103,3 +103,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+
