@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -69,6 +68,13 @@ const TaskCreationScreen = () => {
   }, [route.params?.task]);
 
   const scheduleReminderNotification = async (reminderTime, taskName) => {
+    const now = new Date();
+    if (reminderTime <= now) {
+      Alert.alert('Invalid Reminder', 'The reminder time must be in the future.');
+      return;
+    }
+
+    console.log('Scheduling reminder for:', reminderTime);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Task Reminder',
