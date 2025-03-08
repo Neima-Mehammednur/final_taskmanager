@@ -81,13 +81,17 @@ const ProfileScreen = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      Alert.alert('Success', 'Logged out successfully!');
-      navigationRef.current?.dispatch(StackActions.replace('Login'));
+        await signOut(auth);
+        Alert.alert('Success', 'Logged out successfully!');
+        navigationRef.current?.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
+
     } catch (error) {
-      Alert.alert('Error', error.message);
+        Alert.alert('Error', error.message);
     }
-  };
+};
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
