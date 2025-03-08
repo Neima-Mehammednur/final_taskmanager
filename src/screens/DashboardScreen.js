@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   View,
@@ -377,3 +376,4 @@ const styles = StyleSheet.create({
 });
 
 export default DashboardScreen;
+

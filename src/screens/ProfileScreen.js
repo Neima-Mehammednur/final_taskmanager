@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -385,3 +384,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+

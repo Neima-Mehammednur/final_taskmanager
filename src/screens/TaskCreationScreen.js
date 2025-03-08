@@ -205,14 +205,29 @@ const TaskCreationScreen = () => {
           ))}
         </View>
 
-        <Text style={[styles.label, isDarkMode && styles.darkText]}>Deadline</Text>
-        <View style={styles.dateTimePickerContainer}>
+        <View style={styles.deadlineFullRow}>
+          <Text style={[styles.label, isDarkMode && styles.darkText, styles.deadlineLabel]}>Deadline</Text>
           <DateTimePicker
             value={taskDeadline}
-            mode="datetime"
+            mode="date"
             display="default"
             onChange={(event, selectedDate) => selectedDate && setTaskDeadline(selectedDate)}
             textColor={isDarkMode ? '#FFF' : '#000'}
+            style={styles.deadlinePicker}
+          />
+          <DateTimePicker
+            value={taskDeadline}
+            mode="time"
+            display="default"
+            onChange={(event, selectedTime) => {
+              if (selectedTime) {
+                const newDeadline = new Date(taskDeadline);
+                newDeadline.setHours(selectedTime.getHours(), selectedTime.getMinutes(), selectedTime.getSeconds());
+                setTaskDeadline(newDeadline);
+              }
+            }}
+            textColor={isDarkMode ? '#FFF' : '#000'}
+            style={styles.deadlinePicker}
           />
         </View>
 
@@ -293,7 +308,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#F5F5F5',
     padding: 16,
-    paddingBottom: 100, 
+    paddingBottom: 100,
   },
   darkContainer: {
     backgroundColor: '#121212',
@@ -374,7 +389,7 @@ const styles = StyleSheet.create({
   reminderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 5,
   },
   reminderToggle: {
     marginLeft: 10,
@@ -383,7 +398,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     position: 'absolute',
-    bottom: 110,
+    bottom: 100,
     left: 16,
     right: 16,
   },
@@ -436,6 +451,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginRight: 10,
     color: '#333',
+  },
+  deadlineFullRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  deadlineLabel: {
+    flex: 1,
+  },
+  deadlinePicker: {
+    flex: 2,
+    marginRight: 5,
   },
 });
 
