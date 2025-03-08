@@ -5,8 +5,6 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DarkModeContext } from '../contexts/DarkModeContext';
-
-// Screens
 import DashboardScreen from '../screens/DashboardScreen';
 import TaskListScreen from '../screens/TaskListScreen';
 import TaskCreationScreen from '../screens/TaskCreationScreen';

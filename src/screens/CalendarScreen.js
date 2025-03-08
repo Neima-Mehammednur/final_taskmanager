@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, onSnapshot, query } from 'firebase/firestore';
@@ -23,6 +24,7 @@ const CalendarScreen = ({ navigation }) => {
   const [tasksForSelectedDate, setTasksForSelectedDate] = useState([]);
   const { isDarkMode } = useContext(DarkModeContext);
   const [calendarKey, setCalendarKey] = useState(0);
+  const [addedTaskIds, setAddedTaskIds] = useState(new Set()); 
 
   useEffect(() => {
     const tasksCollection = collection(db, 'tasks');
@@ -79,14 +81,6 @@ const CalendarScreen = ({ navigation }) => {
     setTasksForSelectedDate(todaysTasks);
   };
 
-  const onDayPress = (day) => {
-    setSelectedDate(day.dateString);
-    const filteredTasks = tasks.filter((task) => {
-      return new Date(task.deadline).toISOString().split('T')[0] === day.dateString;
-    });
-    setTasksForSelectedDate(filteredTasks);
-  };
-
   const requestCalendarPermissions = async () => {
     const { status } = await CalendarLib.requestCalendarPermissionsAsync();
     if (status === 'granted') {
@@ -99,46 +93,20 @@ const CalendarScreen = ({ navigation }) => {
   };
 
   const getDefaultCalendar = async () => {
-    if (Platform.OS === 'ios') {
-      return await CalendarLib.getDefaultCalendarAsync();
-    } else {
-      const calendars = await CalendarLib.getCalendarsAsync(CalendarLib.EntityTypes.EVENT);
-      return calendars.find((cal) => cal.isPrimary) || calendars[0];
-    }
-  };
-
-  const createCalendar = async () => {
-    const newCalendar = {
-      title: 'My App Calendar',
-      entityType: CalendarLib.EntityTypes.EVENT,
-      color: '#4CAF50',
-      sourceId: (Platform.OS === 'ios') ? await CalendarLib.getDefaultCalendarAsync().source.id : undefined,
-      source: (Platform.OS === 'ios') ? undefined : { isLocalAccount: true, name: 'My App' },
-      name: 'My App Calendar',
-      accessLevel: CalendarLib.CalendarAccessLevel.OWNER,
-      ownerAccount: (Platform.OS === 'android') ? 'local' : undefined,
-    };
-    return await CalendarLib.createCalendarAsync(newCalendar);
-  };
-
-  const getOrCreateCalendar = async () => {
-    let calendar = await getDefaultCalendar();
-    if (!calendar) {
-      calendar = await createCalendar();
-    }
-    return calendar;
+    return await CalendarLib.getDefaultCalendarAsync();
   };
 
   const addEventToCalendar = async (eventData) => {
     try {
       const hasPermissions = await requestCalendarPermissions();
       if (!hasPermissions) {
+        console.log('Calendar permissions not granted.');
         return;
       }
 
-      const calendar = await getOrCreateCalendar();
+      const calendar = await getDefaultCalendar();
       if (!calendar) {
-        console.error('Could not get or create calendar.');
+        console.error('Could not get default calendar.');
         return;
       }
 
@@ -152,24 +120,53 @@ const CalendarScreen = ({ navigation }) => {
 
       const eventId = await CalendarLib.createEventAsync(calendar.id, event);
       console.log('Event added to calendar:', eventId);
+      return eventId; 
     } catch (error) {
       console.error('Error adding event to calendar:', error);
+      Alert.alert('Error', 'Failed to add task to calendar.');
+      return null;
     }
   };
 
-  const handleAddTaskToCalendar = async (task) => {
-    const eventData = {
-      title: task.name,
-      startDate: new Date(task.deadline),
-      endDate: new Date(new Date(task.deadline).getTime() + 60 * 60 * 1000),
-      notes: task.description,
-    };
-    await addEventToCalendar(eventData);
+  const handleAddTasksToCalendar = async (tasks) => {
+    const newAddedTaskIds = new Set(addedTaskIds); 
+    let addedCount = 0;
+
+    for (const task of tasks) {
+      if (!addedTaskIds.has(task.id)) {
+        const eventData = {
+          title: task.name,
+          startDate: new Date(task.deadline),
+          endDate: new Date(new Date(task.deadline).getTime() + 60 * 60 * 1000), 
+          notes: task.description,
+        };
+        const eventId = await addEventToCalendar(eventData);
+        if (eventId) {
+          newAddedTaskIds.add(task.id); 
+          addedCount++;
+        }
+      }
+    }
+
+    if (addedCount > 0) {
+      setAddedTaskIds(newAddedTaskIds);
+      
+    } else {
+
+    }
   };
 
-  const handleTaskPress = (task) => {
-    navigation.navigate('TaskDetail', { task });
-    handleAddTaskToCalendar(task);
+  const onDayPress = async (day) => {
+    setSelectedDate(day.dateString);
+    const filteredTasks = tasks.filter((task) => {
+      return new Date(task.deadline).toISOString().split('T')[0] === day.dateString;
+    });
+    setTasksForSelectedDate(filteredTasks);
+    if (filteredTasks.length > 0) {
+      await handleAddTasksToCalendar(filteredTasks);
+    } else {
+      
+    }
   };
 
   return (
@@ -210,7 +207,7 @@ const CalendarScreen = ({ navigation }) => {
             tasksForSelectedDate.map((task, index) => (
               <TouchableOpacity
                 key={`${task.id}-${index}`}
-                onPress={() => handleTaskPress(task)}
+                onPress={() => navigation.navigate('TaskDetail', { task })}
               >
                 <View
                   style={[

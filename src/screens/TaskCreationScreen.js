@@ -1,21 +1,32 @@
 
-import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
-import { addTask, updateTask } from "../services/firebaseService";
-import { DarkModeContext } from "../contexts/DarkModeContext";
+import { addTask, updateTask } from '../services/firebaseService';
+import { DarkModeContext } from '../contexts/DarkModeContext';
+import * as Notifications from 'expo-notifications';
 
 const TaskCreationScreen = () => {
-  const [taskName, setTaskName] = useState("");
-  const [taskDescription, setTaskDescription] = useState("");
-  const [taskCourse, setTaskCourse] = useState("");
-  const [taskPriority, setTaskPriority] = useState("Low");
+  const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskCourse, setTaskCourse] = useState('');
+  const [taskPriority, setTaskPriority] = useState('Low');
   const [taskDeadline, setTaskDeadline] = useState(new Date());
-  const [taskNotes, setTaskNotes] = useState("");
+  const [taskNotes, setTaskNotes] = useState('');
   const [isReminderEnabled, setIsReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState(new Date());
   const [isEditing, setIsEditing] = useState(false);
@@ -43,12 +54,12 @@ const TaskCreationScreen = () => {
       setTaskId(task.id);
       setAttachments(task.attachments || []);
     } else {
-      setTaskName("");
-      setTaskDescription("");
-      setTaskCourse("");
-      setTaskPriority("Low");
+      setTaskName('');
+      setTaskDescription('');
+      setTaskCourse('');
+      setTaskPriority('Low');
       setTaskDeadline(new Date());
-      setTaskNotes("");
+      setTaskNotes('');
       setIsReminderEnabled(false);
       setReminderTime(new Date());
       setIsEditing(false);
@@ -57,9 +68,22 @@ const TaskCreationScreen = () => {
     }
   }, [route.params?.task]);
 
+  const scheduleReminderNotification = async (reminderTime, taskName) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Task Reminder',
+        body: `Don't forget: ${taskName}`,
+        sound: true,
+      },
+      trigger: {
+        date: reminderTime,
+      },
+    });
+  };
+
   const handleCreateOrUpdateTask = async () => {
     if (!taskName || !taskDescription || !taskCourse) {
-      Alert.alert("Error", "Please fill in all required fields");
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
@@ -82,21 +106,25 @@ const TaskCreationScreen = () => {
         await addTask(taskData);
       }
 
-      navigation.navigate("TaskList", { refresh: true });
+      if (isReminderEnabled) {
+        await scheduleReminderNotification(reminderTime, taskName);
+      }
 
-      setTaskName("");
-      setTaskDescription("");
-      setTaskCourse("");
-      setTaskPriority("Low");
+      navigation.navigate('TaskList', { refresh: true });
+
+      setTaskName('');
+      setTaskDescription('');
+      setTaskCourse('');
+      setTaskPriority('Low');
       setTaskDeadline(new Date());
-      setTaskNotes("");
+      setTaskNotes('');
       setIsReminderEnabled(false);
       setReminderTime(new Date());
       setIsEditing(false);
       setTaskId(null);
       setAttachments([]);
     } catch (error) {
-      console.error("Error saving task:", error);
+      console.error('Error saving task:', error);
     }
   };
 
@@ -109,7 +137,7 @@ const TaskCreationScreen = () => {
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
+        type: '*/*',
         copyToCacheDirectory: false,
       });
 
@@ -118,10 +146,10 @@ const TaskCreationScreen = () => {
         const newAttachment = { uri: file.uri, name: file.name };
         setAttachments([...attachments, newAttachment]);
       } else {
-        console.log("Document picker was canceled or no file was selected.");
+        console.log('Document picker was canceled or no file was selected.');
       }
     } catch (err) {
-      console.warn("Document Picker Error:", err);
+      console.warn('Document Picker Error:', err);
     }
   };
 
@@ -139,17 +167,14 @@ const TaskCreationScreen = () => {
         style={{ flex: 1 }}
       >
         <Text style={[styles.headerText, isDarkMode && styles.darkText]}>
-          {isEditing ? "Edit Task" : "Create Task"}
+          {isEditing ? 'Edit Task' : 'Create Task'}
         </Text>
 
         <Text style={[styles.label, isDarkMode && styles.darkText]}>Task Name</Text>
         <TextInput
-          style={[
-            styles.input,
-            isDarkMode && styles.darkInput,
-          ]}
+          style={[styles.input, isDarkMode && styles.darkInput]}
           placeholder="Enter task name"
-          placeholderTextColor={isDarkMode ? "#777" : "#999"}
+          placeholderTextColor={isDarkMode ? '#777' : '#999'}
           value={taskName}
           onChangeText={setTaskName}
         />
@@ -162,7 +187,7 @@ const TaskCreationScreen = () => {
             isDarkMode && styles.darkInput,
           ]}
           placeholder="Enter task description"
-          placeholderTextColor={isDarkMode ? "#777" : "#999"}
+          placeholderTextColor={isDarkMode ? '#777' : '#999'}
           value={taskDescription}
           onChangeText={setTaskDescription}
           multiline
@@ -170,19 +195,16 @@ const TaskCreationScreen = () => {
 
         <Text style={[styles.label, isDarkMode && styles.darkText]}>Course</Text>
         <TextInput
-          style={[
-            styles.input,
-            isDarkMode && styles.darkInput,
-          ]}
+          style={[styles.input, isDarkMode && styles.darkInput]}
           placeholder="Enter course name"
-          placeholderTextColor={isDarkMode ? "#777" : "#999"}
+          placeholderTextColor={isDarkMode ? '#777' : '#999'}
           value={taskCourse}
           onChangeText={setTaskCourse}
         />
 
         <Text style={[styles.label, isDarkMode && styles.darkText]}>Priority</Text>
         <View style={styles.pickerContainer}>
-          {["Low", "Medium", "High"].map((priority) => (
+          {['Low', 'Medium', 'High'].map((priority) => (
             <TouchableOpacity
               key={priority}
               style={[
@@ -206,7 +228,9 @@ const TaskCreationScreen = () => {
         </View>
 
         <View style={styles.deadlineFullRow}>
-          <Text style={[styles.label, isDarkMode && styles.darkText, styles.deadlineLabel]}>Deadline</Text>
+          <Text style={[styles.label, isDarkMode && styles.darkText, styles.deadlineLabel]}>
+            Deadline
+          </Text>
           <DateTimePicker
             value={taskDeadline}
             mode="date"
@@ -260,26 +284,16 @@ const TaskCreationScreen = () => {
         <Text style={[styles.label, isDarkMode && styles.darkText]}>Attachments</Text>
         <View style={styles.attachmentsRow}>
           <TouchableOpacity
-            style={[
-              styles.attachmentButton,
-              isDarkMode && styles.darkAttachmentButton,
-            ]}
+            style={[styles.attachmentButton, isDarkMode && styles.darkAttachmentButton]}
             onPress={pickDocument}
           >
-            <Ionicons
-              name="attach"
-              size={20}
-              color={isDarkMode ? '#FFF' : '#333'}
-            />
+            <Ionicons name="attach" size={20} color={isDarkMode ? '#FFF' : '#333'} />
           </TouchableOpacity>
           <ScrollView horizontal style={styles.attachmentsContainer}>
             {attachments.map((attachment, index) => (
               <View
                 key={index}
-                style={[
-                  styles.attachmentItem,
-                  isDarkMode && styles.darkAttachmentItem,
-                ]}
+                style={[styles.attachmentItem, isDarkMode && styles.darkAttachmentItem]}
               >
                 <Text style={[styles.attachmentName, isDarkMode && styles.darkText]}>
                   {attachment.name}
@@ -296,7 +310,7 @@ const TaskCreationScreen = () => {
       {/* Create Button */}
       <TouchableOpacity style={styles.createButton} onPress={handleCreateOrUpdateTask}>
         <LinearGradient colors={['#4CAF50', '#81C784']} style={styles.gradientButton}>
-          <Text style={styles.createButtonText}>{isEditing ? "Update Task" : "Create Task"}</Text>
+          <Text style={styles.createButtonText}>{isEditing ? 'Update Task' : 'Create Task'}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -17,10 +18,10 @@ import { signOut, updateProfile } from 'firebase/auth';
 import { StackActions } from '@react-navigation/native';
 import { navigationRef } from '../../App';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchTasks } from '../services/firebaseService'; 
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
-import { DarkModeContext } from '../contexts/DarkModeContext'; 
-
+import { fetchTasks } from '../services/firebaseService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DarkModeContext } from '../contexts/DarkModeContext';
+import * as Notifications from 'expo-notifications';
 
 const ProfileScreen = () => {
   const [user, setUser] = useState(null);
@@ -35,7 +36,7 @@ const ProfileScreen = () => {
     setUser(auth.currentUser);
     setEditedName(auth.currentUser?.displayName || '');
     loadNotifications();
-    fetchUserTasks(); // Fetch tasks for statistics
+    fetchUserTasks();
   }, []);
 
   const fetchUserTasks = async () => {
@@ -47,15 +48,35 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleDarkModeToggle = (value) => {
-    toggleDarkMode(); // Use the context's toggle function
+  const requestNotificationPermissions = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'You need to enable notifications for this feature.');
+      return false;
+    }
+    return true;
   };
 
-  const saveDarkMode = async (mode) => {
+  const saveNotifications = async (enabled) => {
     try {
-      await AsyncStorage.setItem('darkMode', mode.toString());
+      await AsyncStorage.setItem('notificationsEnabled', enabled.toString());
+
+      if (enabled) {
+        const permissionGranted = await requestNotificationPermissions();
+        if (permissionGranted) {
+          await Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+              shouldShowAlert: true,
+              shouldPlaySound: true,
+              shouldSetBadge: true,
+            }),
+          });
+        }
+      } else {
+        await Notifications.cancelAllScheduledNotificationsAsync();
+      }
     } catch (error) {
-      console.error('Error saving dark mode:', error);
+      console.error('Error saving notifications:', error);
     }
   };
 
@@ -70,27 +91,18 @@ const ProfileScreen = () => {
     }
   };
 
-  const saveNotifications = async (enabled) => {
-    try {
-      await AsyncStorage.setItem('notificationsEnabled', enabled.toString());
-    } catch (error) {
-      console.error('Error saving notifications:', error);
-    }
-  };
-
   const handleLogout = async () => {
     try {
-        await signOut(auth);
-        Alert.alert('Success', 'Logged out successfully!');
-        navigationRef.current?.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-        });
-
+      await signOut(auth);
+      Alert.alert('Success', 'Logged out successfully!');
+      navigationRef.current?.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
     } catch (error) {
-        Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message);
     }
-};
+  };
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -110,7 +122,6 @@ const ProfileScreen = () => {
       updateProfile(auth.currentUser, { displayName: editedName })
         .then(() => {
           setUser({ ...auth.currentUser, displayName: editedName });
-          //Alert.alert('Success', 'Profile updated!');
         })
         .catch((error) => {
           Alert.alert('Error', error.message);
@@ -124,8 +135,6 @@ const ProfileScreen = () => {
     const activeTasks = tasks.length - completedTasks;
     return { completedTasks, activeTasks };
   };
-
-  
 
   return (
     <SafeAreaView style={[styles.safeArea, isDarkMode && styles.darkSafeArea]}>
@@ -179,7 +188,7 @@ const ProfileScreen = () => {
               trackColor={{ false: '#767577', true: '#81C784' }}
               thumbColor={isDarkMode ? '#4CAF50' : '#f4f3f4'}
               ios_backgroundColor="#3e3e3e"
-              onValueChange={handleDarkModeToggle} 
+              onValueChange={toggleDarkMode}
               value={isDarkMode}
             />
           </View>
@@ -197,7 +206,6 @@ const ProfileScreen = () => {
               value={notificationsEnabled}
             />
           </View>
-          {/* Add more settings options */}
         </View>
 
         <View style={[styles.profileStatistics, isDarkMode && styles.darkCard]}>
@@ -384,4 +392,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-
