@@ -66,9 +66,17 @@ const CalendarScreen = ({ navigation }) => {
   return (
     <ScrollView style={[styles.container, isDarkMode && styles.darkContainer]}>
       <Text style={[styles.headerText, isDarkMode && styles.darkText]}>My Calendar</Text>
-      <CalendarComponent markedDates={markedDates} onDayPress={onDayPress} isDarkMode={isDarkMode} />
+      <CalendarComponent
+        markedDates={markedDates}
+        onDayPress={onDayPress}
+        isDarkMode={isDarkMode} 
+      />
       {selectedDate && (
-        <TaskListComponent tasks={tasksForSelectedDate} onTaskPress={(task) => navigation.navigate('TaskDetail', { task })} isDarkMode={isDarkMode} />
+        <TaskListComponent
+          tasks={tasksForSelectedDate}
+          onTaskPress={(task) => navigation.navigate('TaskDetail', { task })}
+          isDarkMode={isDarkMode}
+        />
       )}
     </ScrollView>
   );
