@@ -10,7 +10,7 @@ const ProfileHeader = ({ user, isEditing, editedName, setEditedName, onEditToggl
     <View style={styles.profileHeader}>
       <TouchableOpacity style={styles.profileImageContainer} onPress={onPickImage}>
         <Image
-          source={user?.photoURL ? { uri: user.photoURL } : require('../../assets/user-image.jpg')}
+          source={user?.photoURL ? { uri: user.photoURL } : require('../assets/user-image.jpg')}
           style={styles.profileImage}
         />
         <View style={styles.editIconContainer}>
