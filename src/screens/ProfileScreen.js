@@ -1,10 +1,11 @@
 
+
 import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../configs/firebaseConfig';
 import { signOut, updateProfile } from 'firebase/auth';
-import { navigationRef } from '../../App';
+import { navigationRef } from '../navigation/navigationRef'; 
 import { fetchTasks } from '../services/firebaseService';
 import { DarkModeContext } from '../contexts/DarkModeContext';
 import ProfileHeader from '../components/ProfileHeader';

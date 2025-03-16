@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -9,10 +10,9 @@ import RegistrationScreen from './src/screens/RegistrationScreen';
 import BottomTabNavigator from './src/navigation/BottomTabNavigator';
 import { DarkModeProvider } from './src/contexts/DarkModeContext';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { navigationRef } from './src/navigation/navigationRef'; 
 
 const Stack = createNativeStackNavigator();
-
-export const navigationRef = React.createRef();
 
 export default function App() {
   const [user, setUser] = useState(null);

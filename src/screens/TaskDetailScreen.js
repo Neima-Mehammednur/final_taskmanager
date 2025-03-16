@@ -1,12 +1,13 @@
+
 import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { DarkModeContext } from '../contexts/DarkModeContext'; 
+import { DarkModeContext } from '../contexts/DarkModeContext';
+import PomodoroTimer from '../components/PomodoroTimer'; 
 
 const TaskDetailScreen = ({ route, navigation }) => {
   const { task } = route.params;
-  const { isDarkMode } = useContext(DarkModeContext); 
+  const { isDarkMode } = useContext(DarkModeContext);
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
@@ -24,6 +25,9 @@ const TaskDetailScreen = ({ route, navigation }) => {
       <Text style={[styles.headerText, isDarkMode && styles.darkText]}>Task Detail</Text>
 
       <ScrollView style={[styles.content, isDarkMode && styles.darkContent]}>
+        {/* Pomodoro Timer Section */}
+        <PomodoroTimer /> 
+
         {/* Name */}
         <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
           <Ionicons name="document-text-outline" size={24} color="#4CAF50" style={styles.icon} />
@@ -32,6 +36,7 @@ const TaskDetailScreen = ({ route, navigation }) => {
             <Text style={[styles.detailText, isDarkMode && styles.darkText]}>{task.name}</Text>
           </View>
         </View>
+
         {/* Description */}
         <View style={[styles.detailCard, isDarkMode && styles.darkDetailCard]}>
           <Ionicons name="document-text-outline" size={24} color="#4CAF50" style={styles.icon} />
