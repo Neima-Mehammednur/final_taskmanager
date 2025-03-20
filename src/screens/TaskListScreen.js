@@ -1,5 +1,5 @@
 
-import React, { useRef, useContext, useState } from 'react';
+import React, { useRef, useContext, useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { DarkModeContext } from '../contexts/DarkModeContext';
@@ -15,13 +15,11 @@ const TaskListScreen = ({ navigation, route }) => {
   const { isDarkMode } = useContext(DarkModeContext);
   const { tasks, loadTasks, handleDeleteTask, handleToggleComplete, handleClearCompleted } = useTaskList();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadTasks();
-    }, [route.params?.refresh])
-  );
+  // Sort tasks by deadline in ascending order
+  const sortedTasks = tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
-  const filteredTasks = tasks.filter((task) => {
+  // Filter tasks based on search text and selected filter
+  const filteredTasks = sortedTasks.filter((task) => {
     const searchMatch = task.name.toLowerCase().includes(searchText.toLowerCase());
 
     if (filter === 'All') return searchMatch;
@@ -33,6 +31,12 @@ const TaskListScreen = ({ navigation, route }) => {
 
     return normalizedCourse === normalizedFilter && searchMatch;
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTasks();
+    }, [route.params?.refresh])
+  );
 
   const tasksLeft = tasks.filter((task) => !task.completed).length;
 
@@ -78,6 +82,7 @@ const TaskListScreen = ({ navigation, route }) => {
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   list: {
