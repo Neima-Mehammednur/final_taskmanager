@@ -17,7 +17,7 @@ const CalendarComponent = ({ markedDates, onDayPress, isDarkMode }) => {
   return (
     <View style={[styles.calendarContainer, isDarkMode && styles.darkCalendarContainer]}>
       <Calendar
-        key={isDarkMode ? 'dark' : 'light'} // Force re-render when theme changes
+        key={isDarkMode ? 'dark' : 'light'} 
         markedDates={markedDates}
         markingType={'multi-dot'}
         onDayPress={onDayPress}
